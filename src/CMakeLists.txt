@@ -6,11 +6,7 @@ add_library(secp256k1_precomputed OBJECT EXCLUDE_FROM_ALL
   precomputed_ecmult_gen.c
 )
 
-if(SGX)
-  set(SECP256K1_LIB "secp256k1_t")
-else()
-  set(SECP256K1_LIB "secp256k1_t")
-endif()
+set(SECP256K1_LIB "secp256k1_t")
 
 # Add objects explicitly rather than linking to the object libs to keep them
 # from being exported.
