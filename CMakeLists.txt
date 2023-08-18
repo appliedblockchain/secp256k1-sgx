@@ -12,8 +12,8 @@ project(libsecp256k1
   # the API. All changes in experimental modules are treated as
   # backwards-compatible and therefore at most increase the minor version.
   VERSION 0.3.3
-  DESCRIPTION "Optimized C library for ECDSA signatures and secret/public key operations on curve secp256k1."
-  HOMEPAGE_URL "https://github.com/bitcoin-core/secp256k1"
+  DESCRIPTION "Optimized C library for ECDSA signatures and secret/public key operations on curve secp256k1 on sgx."
+  HOMEPAGE_URL "https://github.com/appliedblockchain/secp256k1"
   LANGUAGES C
 )
 
@@ -34,18 +34,24 @@ endif()
 # https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
 # All changes in experimental modules are treated as if they don't affect the
 # interface and therefore only increase the revision.
-set(${PROJECT_NAME}_LIB_VERSION_CURRENT 2)
-set(${PROJECT_NAME}_LIB_VERSION_REVISION 3)
+set(${PROJECT_NAME}_LIB_VERSION_CURRENT 3)
+set(${PROJECT_NAME}_LIB_VERSION_REVISION 0)
 set(${PROJECT_NAME}_LIB_VERSION_AGE 0)
 
 set(CMAKE_C_STANDARD 90)
 set(CMAKE_C_EXTENSIONS OFF)
 
+if(SGX)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+  set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR}/install)
+  add_definitions(-DSGX)
+endif()
+
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 option(BUILD_SHARED_LIBS "Build shared libraries." ON)
 option(SECP256K1_DISABLE_SHARED "Disable shared library. Overrides BUILD_SHARED_LIBS." OFF)
-if(SECP256K1_DISABLE_SHARED)
+if(SECP256K1_DISABLE_SHARED OR SGX)
   set(BUILD_SHARED_LIBS OFF)
 endif()
 
@@ -57,12 +63,19 @@ if(SECP256K1_ENABLE_MODULE_ECDH)
 endif()
 
 option(SECP256K1_ENABLE_MODULE_RECOVERY "Enable ECDSA pubkey recovery module." OFF)
+if(SGX)
+  set(SECP256K1_ENABLE_MODULE_RECOVERY ON)
+endif()
 if(SECP256K1_ENABLE_MODULE_RECOVERY)
   add_compile_definitions(ENABLE_MODULE_RECOVERY=1)
 endif()
 
 option(SECP256K1_ENABLE_MODULE_EXTRAKEYS "Enable extrakeys module." ON)
 option(SECP256K1_ENABLE_MODULE_SCHNORRSIG "Enable schnorrsig module." ON)
+if(SGX)
+  set(SECP256K1_ENABLE_MODULE_EXTRAKEYS OFF)
+  set(SECP256K1_ENABLE_MODULE_SCHNORRSIG OFF)
+endif()
 if(SECP256K1_ENABLE_MODULE_SCHNORRSIG)
   set(SECP256K1_ENABLE_MODULE_EXTRAKEYS ON)
   add_compile_definitions(ENABLE_MODULE_SCHNORRSIG=1)
@@ -72,6 +85,9 @@ if(SECP256K1_ENABLE_MODULE_EXTRAKEYS)
 endif()
 
 option(SECP256K1_ENABLE_MODULE_ELLSWIFT "Enable ElligatorSwift module." ON)
+if(SGX)
+  set(SECP256K1_ENABLE_MODULE_ELLSWIFT OFF)
+endif()
 if(SECP256K1_ENABLE_MODULE_ELLSWIFT)
   add_compile_definitions(ENABLE_MODULE_ELLSWIFT=1)
 endif()
@@ -160,6 +176,14 @@ option(SECP256K1_BUILD_TESTS "Build tests." ON)
 option(SECP256K1_BUILD_EXHAUSTIVE_TESTS "Build exhaustive tests." ON)
 option(SECP256K1_BUILD_CTIME_TESTS "Build constant-time tests." ${SECP256K1_VALGRIND})
 option(SECP256K1_BUILD_EXAMPLES "Build examples." OFF)
+
+if(SGX)
+  SET(SECP256K1_BUILD_BENCHMARK OFF)
+  SET(SECP256K1_BUILD_TESTS OFF)
+  SET(SECP256K1_BUILD_EXHAUSTIVE_TESTS OFF)
+  SET(SECP256K1_BUILD_CTIME_TESTS OFF)
+  SET(SECP256K1_BUILD_EXAMPLES OFF)
+endif()
 
 # Redefine configuration flags.
 # We leave assertions on, because they are only used in the examples, and we want them always on there.
