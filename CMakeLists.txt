@@ -239,6 +239,10 @@ else()
 endif()
 
 include(TryAppendCFlags)
+if(SGX)
+  try_append_c_flags(-fPIE)
+endif()
+
 if(MSVC)
   # Keep the following commands ordered lexicographically.
   try_append_c_flags(/W3) # Production quality warning level.
